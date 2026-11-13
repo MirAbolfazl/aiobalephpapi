@@ -14,7 +14,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "aiobale/aiobale-php": "dev-development",
+        "aiobale/aiobale-php": "^1.0.3",
         "dedoc/scramble": "^0.13.53",
         "filament/filament": "^5.11",
         "laravel/framework": "^13.17",
@@ -23,7 +23,6 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
-        "laravel/boost": "^2.10",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
         "laravel/pint": "^1.27",
@@ -43,18 +42,6 @@
             "Tests\\": "tests/"
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../aiobalephp",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "aiobale/aiobale-php": "dev-development"
-                }
-            }
-        }
-    ],
     "scripts": {
         "setup": [
             "composer install",
