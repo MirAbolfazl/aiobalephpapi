@@ -28,9 +28,9 @@ class BaleMethodCatalog
     public function describe(string $name, string $class): array
     {
         return [
-            'name' => $name,
-            'service' => $class::service(),
-            'method' => $class::methodName(),
+            'name' => (string) $name,
+            'service' => (string) $class::service(),
+            'method' => (string) $class::methodName(),
             'fields' => $this->describeSchema($class::schema()),
             'route' => $this->authenticationRoute($name, $class),
         ];

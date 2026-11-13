@@ -5,11 +5,26 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\BaleAccount;
 use App\Services\BaleClientFactory;
+use Dedoc\Scramble\Attributes\Endpoint;
+use Dedoc\Scramble\Attributes\Group;
+use Dedoc\Scramble\Attributes\PathParameter;
+use Dedoc\Scramble\Attributes\QueryParameter;
+use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+#[Group('Bale accounts', description: 'Manage Bale accounts connected to the authenticated API user.', weight: 20)]
 class BaleAccountController extends Controller
 {
+    #[Endpoint(
+        operationId: 'listBaleAccounts',
+        title: 'List Bale accounts',
+        description: 'Returns only the current user’s accounts, ordered newest first.',
+    )]
+    #[QueryParameter('per_page', description: 'Number of accounts per page (1–100; defaults to 20).', type: 'int', default: 20)]
+    #[Response(
+        type: 'array{data: list<array{id: int, label: string, phone: string|null, bale_user_id: int|null, is_active: bool, last_used_at: string|null, created_at: string|null}>, meta: array{current_page: int, last_page: int, per_page: int, total: int}}',
+    )]
     public function index(Request $request): JsonResponse
     {
         $accounts = $request->user()->baleAccounts()
@@ -27,6 +42,13 @@ class BaleAccountController extends Controller
         ]);
     }
 
+    #[Endpoint(
+        operationId: 'getBaleAccount',
+        title: 'Get a Bale account',
+        description: 'Returns an account owned by the authenticated API user.',
+    )]
+    #[PathParameter('account', description: 'ID of the connected Bale account.', type: 'int')]
+    #[Response(type: 'array{data: array{id: int, label: string, phone: string|null, bale_user_id: int|null, is_active: bool, last_used_at: string|null, created_at: string|null}}')]
     public function show(Request $request, int $account): JsonResponse
     {
         return response()->json([
@@ -34,6 +56,13 @@ class BaleAccountController extends Controller
         ]);
     }
 
+    #[Endpoint(
+        operationId: 'updateBaleAccount',
+        title: 'Rename a Bale account',
+        description: 'Updates the display label of an account owned by the authenticated API user.',
+    )]
+    #[PathParameter('account', description: 'ID of the connected Bale account.', type: 'int')]
+    #[Response(type: 'array{data: array{id: int, label: string, phone: string|null, bale_user_id: int|null, is_active: bool, last_used_at: string|null, created_at: string|null}}')]
     public function update(Request $request, int $account): JsonResponse
     {
         $data = $request->validate(['label' => ['required', 'string', 'max:100']]);
@@ -43,6 +72,13 @@ class BaleAccountController extends Controller
         return response()->json(['data' => $this->accountData($baleAccount->refresh())]);
     }
 
+    #[Endpoint(
+        operationId: 'deleteBaleAccount',
+        title: 'Delete a Bale account',
+        description: 'Deletes the connected account and its locally stored session.',
+    )]
+    #[PathParameter('account', description: 'ID of the connected Bale account.', type: 'int')]
+    #[Response(status: 204, description: 'The account was deleted.')]
     public function destroy(Request $request, int $account): JsonResponse
     {
         $this->ownedAccount($request, $account)->delete();
@@ -50,6 +86,13 @@ class BaleAccountController extends Controller
         return response()->json(status: 204);
     }
 
+    #[Endpoint(
+        operationId: 'signOutBaleAccount',
+        title: 'Sign out of Bale',
+        description: 'Revokes the Bale session and marks the connected account inactive.',
+    )]
+    #[PathParameter('account', description: 'ID of the connected Bale account.', type: 'int')]
+    #[Response(type: 'array{message: string}')]
     public function signOut(Request $request, int $account): JsonResponse
     {
         $baleAccount = $this->ownedAccount($request, $account);

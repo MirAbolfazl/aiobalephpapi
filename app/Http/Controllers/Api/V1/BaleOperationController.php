@@ -12,12 +12,22 @@ use Aiobale\Exception\AiobaleException;
 use Aiobale\Exception\BaleApiException;
 use Aiobale\Methods\MethodRegistry;
 use Aiobale\Model\BaleMethod;
+use Dedoc\Scramble\Attributes\Endpoint;
+use Dedoc\Scramble\Attributes\Group;
+use Dedoc\Scramble\Attributes\PathParameter;
+use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+#[Group('Bale operations', description: 'Discover Bale RPC schemas and invoke operations on connected accounts.', weight: 50)]
 class BaleOperationController extends Controller
 {
-    /** @response array{data: list<array{name: string, service: string, method: string, fields: array<string, mixed>, route: string}>} */
+    #[Endpoint(
+        operationId: 'listBaleOperations',
+        title: 'List available Bale operations',
+        description: 'Returns the registered operation names, Bale services, request fields, and invocation routes. Use the field schema to construct the payload for an operation.',
+    )]
+    #[Response(type: 'array{data: list<array{name: string, service: string, method: string, fields: array<string, mixed>, route: string}>}')]
     public function index(BaleMethodCatalog $catalog): JsonResponse
     {
         $methods = [];
@@ -31,7 +41,24 @@ class BaleOperationController extends Controller
         return response()->json(['data' => $methods]);
     }
 
-    /** @response array{data: mixed}|array{error: array{code: string, message: string}} */
+    #[Endpoint(
+        operationId: 'invokeBaleOperation',
+        title: 'Invoke a Bale operation',
+        description: 'Invokes a registered RPC for the selected account. Put operation-specific fields inside payload; inspect GET /bale/methods for field names and types.',
+    )]
+    #[PathParameter('account', description: 'ID of the connected Bale account.', type: 'int')]
+    #[PathParameter('method', description: 'Registered operation name, as returned by GET /bale/methods.', type: 'string')]
+    #[Response(type: 'array{data: mixed}', description: 'The serialized result returned by Bale.')]
+    #[Response(
+        status: 404,
+        type: 'array{message: string}',
+        description: 'The account or operation was not found, or the operation is not available on this route.',
+    )]
+    #[Response(
+        status: 502,
+        type: 'array{error: array{code: string, message: string}}',
+        description: 'Bale returned an API error or the client could not complete the request.',
+    )]
     public function invoke(
         Request $request,
         int $account,

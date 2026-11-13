@@ -80,9 +80,16 @@ php artisan bale:watch-events 1
 
 ## مستندات API و پنل مدیریت
 
-- مستندات تعاملی: `http://127.0.0.1:8000/docs/api`
-- سند OpenAPI: `http://127.0.0.1:8000/docs/api.json`
+- مستندات تعاملی OpenAPI 3.1: `http://127.0.0.1:8000/docs/api`
+- سند OpenAPI برای Swagger UI، Postman و تولید client: `http://127.0.0.1:8000/docs/api.json`
 - پنل مدیریت: `http://127.0.0.1:8000/admin`
+
+در صفحهٔ مستندات از **Authorize** برای واردکردن توکن API استفاده کنید؛ مسیرهای محافظت‌شده از Bearer authentication استفاده می‌کنند. سند به‌صورت خودکار از routeها، validation و توضیحات controllerها ساخته می‌شود. برای بررسی یا خروجی‌گرفتن از سند:
+
+```bash
+php artisan scramble:analyze
+php artisan scramble:export --path=storage/api-docs/openapi.json
+```
 
 مستندات و پنل را در محیط محلی باز کنید. دسترسی ادمین به‌صورت پیش‌فرض برای همه غیرفعال است و هیچ حساب یا رمز پیش‌فرضی ساخته نمی‌شود.
 

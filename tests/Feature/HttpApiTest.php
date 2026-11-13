@@ -86,6 +86,22 @@ class HttpApiTest extends TestCase
             ]);
     }
 
+    public function test_service_qualified_bale_method_names_match_the_generic_route(): void
+    {
+        $route = app('router')->getRoutes()->match(
+            \Illuminate\Http\Request::create(
+                '/api/v1/bale/accounts/1/methods/bale.groups.v1.Groups.PinMessage',
+                'POST',
+            ),
+        );
+
+        $this->assertSame(
+            'App\\Http\\Controllers\\Api\\V1\\BaleOperationController@invoke',
+            $route->getActionName(),
+        );
+        $this->assertSame('bale.groups.v1.Groups.PinMessage', $route->parameter('method'));
+    }
+
     public function test_authentication_operations_cannot_be_invoked_through_the_generic_method_route(): void
     {
         $user = User::factory()->create();

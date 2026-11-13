@@ -18,7 +18,7 @@ return [
      * Multiple includes or wildcards → server defaults to / and paths stay full (/api/users).
      * Override with `servers`, or use Scramble::registerApi() for separate bases.
      */
-    'api_path' => 'api',
+    'api_path' => 'api/v1',
 
     /*
      * Your API domain. By default, app domain is used. This is also a part of the default API routes
@@ -47,19 +47,37 @@ return [
     'openapi_version' => \Dedoc\Scramble\OpenApiVersion::V3_1,
 
     'info' => [
+        'title' => 'aiobalephpapi API',
         /*
          * API version.
          */
-        'version' => env('API_VERSION', '0.0.1'),
+        'version' => env('API_VERSION', '1.0.0'),
 
         /*
          * Description rendered on the home page of the API documentation (`/docs/api`).
          */
-        'description' => '',
+        'description' => <<<'MARKDOWN'
+            HTTP API for managing user accounts, connected Bale sessions, files, and webhooks.
+
+            ## Authentication
+            Register or log in to receive a personal API token. Send it as
+            `Authorization: Bearer <token>` on protected endpoints. Bale sign-in
+            challenges are separate from API authentication and create a connected Bale account.
+
+            ## Bale operations
+            Use `GET /bale/methods` to inspect available operations and their request schemas.
+            Submit operation-specific input inside the `payload` property to the generic method
+            endpoint. Binary values in responses are represented as Base64 with an encoding marker.
+
+            ## Responses and pagination
+            Successful responses use a `data` envelope unless the endpoint returns a file or no
+            content. Collection endpoints return pagination details under `meta`. Validation
+            errors use HTTP 422; protected endpoints require a valid Bearer token.
+            MARKDOWN,
     ],
 
     'ui' => [
-        'title' => null,
+        'title' => 'aiobalephpapi API Reference',
     ],
 
     /*
@@ -185,5 +203,14 @@ return [
      *     ],
      * ],
      */
-    'security_strategy' => \Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy::class,
+    'security_strategy' => [
+        \Dedoc\Scramble\SecurityDocumentation\MiddlewareAuthSecurityStrategy::class,
+        [
+            'middleware' => [
+                'auth',
+                'auth:*',
+                'Illuminate\\Auth\\Middleware\\Authenticate:*',
+            ],
+        ],
+    ],
 ];

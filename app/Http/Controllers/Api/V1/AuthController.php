@@ -4,13 +4,26 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Dedoc\Scramble\Attributes\Endpoint;
+use Dedoc\Scramble\Attributes\Group;
+use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
+#[Group('Authentication', description: 'Register API users, issue personal access tokens, and manage the current API session.', weight: 10)]
 class AuthController extends Controller
 {
-    /** @response array{data: array{user: array{id: int, name: string, email: string}, token: string}} */
+    #[Endpoint(
+        operationId: 'registerApiUser',
+        title: 'Register an API user',
+        description: 'Creates a user and returns a personal Bearer token. Passwords must be at least 12 characters.',
+    )]
+    #[Response(
+        status: 201,
+        type: 'array{data: array{user: array{id: int, name: string, email: string}, token: string}}',
+        description: 'The account and newly issued API token.',
+    )]
     public function register(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -32,7 +45,20 @@ class AuthController extends Controller
         ], 201);
     }
 
-    /** @response array{data: array{user: array{id: int, name: string, email: string}, token: string}} */
+    #[Endpoint(
+        operationId: 'loginApiUser',
+        title: 'Log in',
+        description: 'Validates API credentials and issues a new personal Bearer token.',
+    )]
+    #[Response(
+        type: 'array{data: array{user: array{id: int, name: string, email: string}, token: string}}',
+        description: 'The authenticated user and newly issued API token.',
+    )]
+    #[Response(
+        status: 401,
+        type: 'array{error: array{code: string, message: string}}',
+        description: 'The supplied email or password is invalid.',
+    )]
     public function login(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -58,11 +84,23 @@ class AuthController extends Controller
         ]);
     }
 
+    #[Endpoint(
+        operationId: 'getCurrentApiUser',
+        title: 'Get the current user',
+        description: 'Returns the profile associated with the supplied API token.',
+    )]
+    #[Response(type: 'array{data: array{id: int, name: string, email: string}}')]
     public function me(Request $request): JsonResponse
     {
         return response()->json(['data' => $this->userData($request->user())]);
     }
 
+    #[Endpoint(
+        operationId: 'logoutApiUser',
+        title: 'Log out',
+        description: 'Revokes the token used for this request. Other tokens owned by the user remain valid.',
+    )]
+    #[Response(type: 'array{message: string}')]
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()?->delete();

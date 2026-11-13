@@ -8,11 +8,16 @@ use App\Http\Controllers\Api\V1\BaleFileController;
 use App\Http\Controllers\Api\V1\BaleOperationController;
 use App\Http\Controllers\Api\V1\MediaAssetController;
 use App\Http\Controllers\Api\V1\WebhookEndpointController;
+use Dedoc\Scramble\Attributes\Endpoint;
 
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:auth');
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:auth');
-    Route::get('/health', static fn () => response()->json(['status' => 'ok']));
+    Route::get(
+        '/health',
+        #[Endpoint(operationId: 'healthCheck', title: 'Check API health', description: 'Returns the basic API availability status.')]
+        static fn () => response()->json(['status' => 'ok']),
+    );
 
     Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
         Route::get('/auth/me', [AuthController::class, 'me']);
@@ -31,7 +36,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('/bale/accounts/{account}/sign-out', [BaleAccountController::class, 'signOut']);
         Route::post('/bale/accounts/{account}/files', [BaleFileController::class, 'store']);
         Route::post('/bale/accounts/{account}/methods/{method}', [BaleOperationController::class, 'invoke'])
-            ->where('method', '[A-Za-z][A-Za-z0-9_]*');
+            ->where('method', '[A-Za-z][A-Za-z0-9_.]*');
 
         Route::apiResource('/webhooks', WebhookEndpointController::class)->except(['show']);
         Route::get('/webhooks/{webhook}/deliveries', [WebhookEndpointController::class, 'deliveries']);

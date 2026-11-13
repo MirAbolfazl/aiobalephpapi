@@ -4,14 +4,26 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\MediaAsset;
+use Dedoc\Scramble\Attributes\Endpoint;
+use Dedoc\Scramble\Attributes\Group;
+use Dedoc\Scramble\Attributes\PathParameter;
+use Dedoc\Scramble\Attributes\QueryParameter;
+use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+#[Group('Media', description: 'Upload, list, download, and delete private files owned by the authenticated API user.', weight: 60)]
 class MediaAssetController extends Controller
 {
-    /** @response array{data: list<array{id: int, bale_account_id: int|null, original_name: string, mime_type: string, size: int, sha256: string, download_url: string, created_at: string|null}>, meta: array{current_page: int, last_page: int, per_page: int, total: int}} */
+    #[Endpoint(
+        operationId: 'listMedia',
+        title: 'List uploaded media',
+        description: 'Returns the current user’s stored media, newest first.',
+    )]
+    #[QueryParameter('per_page', description: 'Number of media items per page (1–100; defaults to 20).', type: 'int', default: 20)]
+    #[Response(type: 'array{data: list<array{id: int, bale_account_id: int|null, original_name: string, mime_type: string, size: int, sha256: string, download_url: string, created_at: string|null}>, meta: array{current_page: int, last_page: int, per_page: int, total: int}}')]
     public function index(Request $request): JsonResponse
     {
         $assets = $request->user()->mediaAssets()->latest('id')
@@ -28,6 +40,16 @@ class MediaAssetController extends Controller
         ]);
     }
 
+    #[Endpoint(
+        operationId: 'uploadMedia',
+        title: 'Upload media to the API',
+        description: 'Stores an allowed media file on the private Laravel disk. Optionally associate it with one of your Bale accounts.',
+    )]
+    #[Response(
+        status: 201,
+        type: 'array{data: array{id: int, bale_account_id: int|null, original_name: string, mime_type: string, size: int, sha256: string, download_url: string, created_at: string|null}}',
+        description: 'The stored media record and its authenticated download URL.',
+    )]
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -70,6 +92,13 @@ class MediaAssetController extends Controller
         return response()->json(['data' => $this->assetData($asset)], 201);
     }
 
+    #[Endpoint(
+        operationId: 'downloadMedia',
+        title: 'Download media',
+        description: 'Downloads a file belonging to the authenticated API user.',
+    )]
+    #[PathParameter('media', description: 'ID of the stored media item.', type: 'int')]
+    #[Response(status: 200, mediaType: 'application/octet-stream', type: 'string', format: 'binary', description: 'The file contents.')]
     public function download(Request $request, int $media)
     {
         $asset = $request->user()->mediaAssets()->findOrFail($media);
@@ -81,6 +110,13 @@ class MediaAssetController extends Controller
         ]);
     }
 
+    #[Endpoint(
+        operationId: 'deleteMedia',
+        title: 'Delete media',
+        description: 'Deletes the stored file and its metadata for the authenticated API user.',
+    )]
+    #[PathParameter('media', description: 'ID of the stored media item.', type: 'int')]
+    #[Response(status: 204, description: 'The media item was deleted.')]
     public function destroy(Request $request, int $media): JsonResponse
     {
         $asset = $request->user()->mediaAssets()->findOrFail($media);

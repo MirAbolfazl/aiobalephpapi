@@ -8,13 +8,27 @@ use App\Models\BaleAuthChallenge;
 use App\Services\BaleResponseSerializer;
 use Aiobale\Client\Client;
 use Aiobale\Exception\BaleApiException;
+use Dedoc\Scramble\Attributes\Endpoint;
+use Dedoc\Scramble\Attributes\Group;
+use Dedoc\Scramble\Attributes\PathParameter;
+use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+#[Group('Bale authentication', description: 'Complete Bale sign-in challenges and connect a Bale account to the authenticated API user.', weight: 30)]
 class BaleAuthController extends Controller
 {
-    /** @response array{data: array{challenge_id: int, sent_code_type: string|null, code_timeout_seconds: int|null, expires_at: string}} */
+    #[Endpoint(
+        operationId: 'startBaleAuthentication',
+        title: 'Start Bale sign-in',
+        description: 'Requests a verification code from Bale and creates a short-lived sign-in challenge. API Bearer authentication is still required.',
+    )]
+    #[Response(
+        status: 201,
+        type: 'array{data: array{challenge_id: int, sent_code_type: string|null, code_timeout_seconds: int|null, expires_at: string}}',
+        description: 'The challenge ID and delivery information for the verification code.',
+    )]
     public function start(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -45,6 +59,23 @@ class BaleAuthController extends Controller
         ], 201);
     }
 
+    #[Endpoint(
+        operationId: 'verifyBaleCode',
+        title: 'Verify the Bale sign-in code',
+        description: 'Verifies the code and connects the Bale account. If two-step verification is enabled, returns 409 and the challenge ID for the password step.',
+    )]
+    #[PathParameter('challenge', description: 'ID returned by the start sign-in endpoint.', type: 'int')]
+    #[Response(
+        status: 201,
+        type: 'array{data: array{account: array{id: int, label: string, phone: string, bale_user_id: int, is_active: bool}}}',
+        description: 'The connected Bale account.',
+    )]
+    #[Response(
+        status: 409,
+        type: 'array{error: array{code: string, message: string}, data: array{challenge_id: int}}',
+        description: 'The Bale account requires two-step verification.',
+    )]
+    #[Response(status: 410, type: 'array{message: string}', description: 'The challenge has expired or exhausted its attempts.')]
     public function verifyCode(Request $request, int $challenge): JsonResponse
     {
         $data = $request->validate([
@@ -78,6 +109,18 @@ class BaleAuthController extends Controller
         );
     }
 
+    #[Endpoint(
+        operationId: 'verifyBalePassword',
+        title: 'Verify the Bale two-step password',
+        description: 'Completes sign-in for a challenge that requires two-step verification.',
+    )]
+    #[PathParameter('challenge', description: 'ID returned by the start sign-in endpoint.', type: 'int')]
+    #[Response(
+        status: 201,
+        type: 'array{data: array{account: array{id: int, label: string, phone: string, bale_user_id: int, is_active: bool}}}',
+        description: 'The connected Bale account.',
+    )]
+    #[Response(status: 410, type: 'array{message: string}', description: 'The challenge has expired or exhausted its attempts.')]
     public function verifyPassword(Request $request, int $challenge): JsonResponse
     {
         $data = $request->validate([
@@ -98,6 +141,14 @@ class BaleAuthController extends Controller
         );
     }
 
+    #[Endpoint(
+        operationId: 'completeBaleSignUp',
+        title: 'Complete Bale sign-up',
+        description: 'Completes Bale registration for a challenge when Bale requires a profile name.',
+    )]
+    #[PathParameter('challenge', description: 'ID returned by the start sign-in endpoint.', type: 'int')]
+    #[Response(type: 'array{data: array{result: mixed}}')]
+    #[Response(status: 410, type: 'array{message: string}', description: 'The challenge has expired or exhausted its attempts.')]
     public function signUp(Request $request, int $challenge): JsonResponse
     {
         $data = $request->validate(['name' => ['required', 'string', 'max:120']]);
