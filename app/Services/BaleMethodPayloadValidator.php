@@ -46,6 +46,31 @@ class BaleMethodPayloadValidator
             }
 
             $type = $definition['type'] ?? 'mixed';
+            if ($type === 'map') {
+                if (!is_array($value)) {
+                    $errors[] = sprintf('%s.%s must be a JSON object.', $path, $name);
+                    continue;
+                }
+
+                $map = [];
+                foreach ($value as $key => $item) {
+                    $normalizedKey = $this->normalizeMapKey(
+                        $definition['key_type'] ?? 'mixed',
+                        $key,
+                        "{$path}.{$name}",
+                        $errors,
+                    );
+                    $map[$normalizedKey] = $this->normalizeValue(
+                        $definition['value_type'] ?? 'mixed',
+                        $item,
+                        "{$path}.{$name}.{$key}",
+                        $errors,
+                    );
+                }
+                $normalized[$name] = $map;
+                continue;
+            }
+
             if ($type === 'array') {
                 if (!is_array($value) || !array_is_list($value)) {
                     $errors[] = sprintf('%s.%s must be a JSON array.', $path, $name);
@@ -92,10 +117,17 @@ class BaleMethodPayloadValidator
         if ($type === 'mixed' || $type === null) {
             return $value;
         }
+
         if ($type === 'int') {
             if (!is_int($value)) {
                 $errors[] = sprintf('%s must be an integer.', $path);
                 return $value;
+            }
+            return $value;
+        }
+        if ($type === 'float') {
+            if (!is_int($value) && (!is_float($value) || !is_finite($value))) {
+                $errors[] = sprintf('%s must be a finite number.', $path);
             }
             return $value;
         }
@@ -149,5 +181,35 @@ class BaleMethodPayloadValidator
         }
 
         return $value;
+    }
+
+    /**
+     * @param list<string> $errors
+     */
+    private function normalizeMapKey(mixed $type, int|string $key, string $path, array &$errors): int|string
+    {
+        if ($type === 'string') {
+            return (string) $key;
+        }
+        if ($type === 'int') {
+            if (is_int($key)) {
+                return $key;
+            }
+            $integer = filter_var($key, FILTER_VALIDATE_INT);
+            if ($integer !== false) {
+                return $integer;
+            }
+            $errors[] = sprintf('%s map keys must be integers.', $path);
+            return $key;
+        }
+        if ($type === 'bool') {
+            if (in_array($key, [0, 1, '0', '1', 'true', 'false'], true)) {
+                return in_array($key, [1, '1', 'true'], true) ? 1 : 0;
+            }
+            $errors[] = sprintf('%s map keys must be booleans.', $path);
+            return $key;
+        }
+
+        return $key;
     }
 }

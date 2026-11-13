@@ -73,7 +73,17 @@ class HttpApiTest extends TestCase
         $response = $this->withToken($token)->getJson('/api/v1/bale/methods')->assertOk();
 
         $this->assertCount(count(MethodRegistry::all()), $response->json('data'));
-        $response->assertJsonFragment(['name' => 'SendMessage']);
+        $response
+            ->assertJsonFragment(['name' => 'SendMessage'])
+            ->assertJsonFragment([
+                'name' => 'GetMyWallets',
+                'service' => 'bale.wallet.v1.Wallet',
+                'method' => 'GetMyWallets',
+            ])
+            ->assertJsonFragment([
+                'name' => 'bale.groups.v1.Groups.PinMessage',
+                'method' => 'PinMessage',
+            ]);
     }
 
     public function test_authentication_operations_cannot_be_invoked_through_the_generic_method_route(): void
@@ -114,6 +124,18 @@ class HttpApiTest extends TestCase
         } catch (ValidationException $exception) {
             $this->assertArrayHasKey('payload', $exception->errors());
         }
+    }
+
+    public function test_generated_rpc_map_fields_are_validated(): void
+    {
+        $methodClass = MethodRegistry::resolve('SubmitMarketFeedback');
+        $this->assertNotNull($methodClass);
+
+        $payload = app(BaleMethodPayloadValidator::class)->validate($methodClass, [
+            'extra_fields' => ['topic' => 'feedback'],
+        ]);
+
+        $this->assertSame(['topic' => 'feedback'], $payload['extra_fields']);
     }
 
     public function test_media_upload_is_stored_on_the_private_disk(): void

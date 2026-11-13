@@ -32,12 +32,12 @@ class BaleMethodCatalog
             'service' => $class::service(),
             'method' => $class::methodName(),
             'fields' => $this->describeSchema($class::schema()),
-            'route' => $this->authenticationRoute($class),
+            'route' => $this->authenticationRoute($name, $class),
         ];
     }
 
     /** @param class-string<BaleMethod> $class */
-    private function authenticationRoute(string $class): string
+    private function authenticationRoute(string $name, string $class): string
     {
         return match ($class) {
             \Aiobale\Methods\Auth\StartPhoneAuth::class => 'POST /api/v1/bale/auth/start',
@@ -45,7 +45,7 @@ class BaleMethodCatalog
             \Aiobale\Methods\Auth\ValidatePassword::class => 'POST /api/v1/bale/auth/challenges/{challenge}/verify-password',
             \Aiobale\Methods\Auth\SignUp::class => 'POST /api/v1/bale/auth/challenges/{challenge}/sign-up',
             \Aiobale\Methods\Auth\SignOut::class => 'POST /api/v1/bale/accounts/{account}/sign-out',
-            default => 'POST /api/v1/bale/accounts/{account}/methods/' . $class::methodName(),
+            default => 'POST /api/v1/bale/accounts/{account}/methods/' . $name,
         };
     }
 
@@ -78,6 +78,25 @@ class BaleMethodCatalog
             }
             if ($type === 'array') {
                 $field['items'] = $this->typeName($definition['items'] ?? 'mixed');
+            } elseif ($type === 'map') {
+                $field['keys'] = $this->typeName($definition['key_type'] ?? 'mixed');
+                $field['values'] = $this->typeName($definition['value_type'] ?? 'mixed');
+                $valueType = $definition['value_type'] ?? 'mixed';
+                if (
+                    is_string($valueType)
+                    && class_exists($valueType)
+                    && is_subclass_of($valueType, BaleObject::class)
+                ) {
+                    if (isset($seen[$valueType]) || $depth >= 4) {
+                        $field['schema_ref'] = $valueType;
+                    } else {
+                        $field['value_fields'] = $this->describeSchema(
+                            $valueType::schema(),
+                            $seen + [$valueType => true],
+                            $depth + 1,
+                        );
+                    }
+                }
             } elseif (is_string($type) && class_exists($type) && is_subclass_of($type, BaleObject::class)) {
                 if (isset($seen[$type]) || $depth >= 4) {
                     $field['schema_ref'] = $type;
