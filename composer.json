@@ -49,7 +49,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "aiobale/aiobale-php": "dev-main"
+                    "aiobale/aiobale-php": "dev-development"
                 }
             }
         }
