@@ -12,7 +12,7 @@
             "dist": {
                 "type": "path",
                 "url": "../aiobalephp",
-                "reference": "871c9f4792de212e12acaf864b91839fca37633f"
+                "reference": "4cb0095508f32bdd19dc78d91b6b648f34ced2f2"
             },
             "require": {
                 "amphp/amp": "^3.0",
@@ -39,7 +39,17 @@
                     "find src tests example -name '*.php' -print0 | xargs -0 -n1 php -l"
                 ]
             },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Abolfazl",
+                    "homepage": "https://github.com/MirAbolfazl"
+                }
+            ],
             "description": "Asynchronous PHP client for the Bale messaging API",
+            "homepage": "https://github.com/MirAbolfazl/aiobalephp",
             "transport-options": {
                 "symlink": true,
                 "relative": true

@@ -3,8 +3,15 @@
     "name": "aiobale/aiobalephpapi",
     "type": "project",
     "description": "Local-first Laravel HTTP API for the Bale platform.",
+    "homepage": "https://github.com/MirAbolfazl/aiobalephpapi",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Abolfazl",
+            "homepage": "https://github.com/MirAbolfazl"
+        }
+    ],
     "require": {
         "php": "^8.3",
         "aiobale/aiobale-php": "dev-development",
