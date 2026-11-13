@@ -168,6 +168,18 @@ curl http://127.0.0.1:8000/api/v1/bale/methods \
   -H 'Accept: application/json'
 ```
 
+برای مرور آفلاین همهٔ **۶۹۰ کلید رجیستری و ۶۸۹ زوج یکتای سرویس/متد**، به
+[مرجع کامل RPC](docs/rpc-reference.md) مراجعه کنید. مرجع شامل نام دقیق RPC، فیلدهای درخواست،
+شماره‌های protobuf، فیلدهای اجباری و مدل پاسخ است. endpoint بالا schemaهای تو‌در‌تو را نیز
+به‌صورت بازشده برمی‌گرداند و منبع به‌روز برای ساخت payload است.
+
+این فایل از `MethodRegistry` کتابخانه تولید می‌شود. برای به‌روزرسانی کپی API در workspaceای که
+دو پروژه کنار هم هستند:
+
+```bash
+php ../aiobalephp/docs/swagger/generate-rpc-reference.php docs/rpc-reference.md
+```
+
 هر عملیات ثبت‌شده در `MethodRegistry` از مسیر زیر قابل اجراست؛ عملیات چرخهٔ ورود از این مسیر عمومی مستثنا هستند:
 
 ```text
@@ -192,6 +204,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/bale/accounts/1/methods/SendMessage \
 ```
 
 schema دقیق هر عملیات و فیلدهای لازم را از endpoint فهرست عملیات دریافت کنید. پاسخ‌های کتابخانه به JSON تبدیل می‌شوند؛ مقدارهای باینری به‌صورت Base64 همراه با مشخص‌کردن encoding برگردانده می‌شوند.
+
+نمونه‌های آماده برای **REST Client در VS Code** در [examples/rpc.http](examples/rpc.http) قرار دارند؛ شامل فهرست schemaها، فراخوانی `GetMyWallets` بدون payload و ارسال متن با `SendMessage`. برای RPCهای دیگر، نام مسیر را از فهرست یا مرجع کامل بردارید و فیلدها را داخل `payload` بفرستید.
 
 ## رسانه‌ها
 

@@ -1,0 +1,43 @@
+@baseUrl = http://127.0.0.1:8000
+@token = paste-your-api-bearer-token-here
+@accountId = 1
+
+### List all RPC names, services, input fields, and invocation routes
+GET {{baseUrl}}/api/v1/bale/methods
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Invoke a method with no request fields
+POST {{baseUrl}}/api/v1/bale/accounts/{{accountId}}/methods/GetMyWallets
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "payload": {}
+}
+
+### Send a text message (replace peer/chat IDs with the target chat)
+POST {{baseUrl}}/api/v1/bale/accounts/{{accountId}}/methods/SendMessage
+Authorization: Bearer {{token}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "payload": {
+    "peer": {
+      "type": 2,
+      "id": 123456
+    },
+    "message_id": 123456789,
+    "content": {
+      "text": {
+        "value": "Hello from aiobalephpapi"
+      }
+    },
+    "chat": {
+      "type": 2,
+      "id": 123456
+    }
+  }
+}
