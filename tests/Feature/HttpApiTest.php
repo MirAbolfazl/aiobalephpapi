@@ -10,6 +10,7 @@ use App\Models\MediaAsset;
 use App\Models\User;
 use App\Models\WebhookDelivery;
 use App\Models\WebhookEndpoint;
+use App\Services\BaleFileUploadService;
 use App\Services\BaleMethodPayloadValidator;
 use App\Services\WebhookUrlPolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -127,6 +128,46 @@ class HttpApiTest extends TestCase
         $asset = MediaAsset::findOrFail($assetId);
         $this->assertSame($owner->id, $asset->user_id);
         Storage::disk('local')->assertExists($asset->path);
+    }
+
+    public function test_bale_file_upload_returns_a_reusable_reference_without_persisting_the_file(): void
+    {
+        $owner = User::factory()->create();
+        $account = $owner->baleAccounts()->create([
+            'label' => 'Primary',
+            'bale_user_id' => 42,
+            'access_token' => 'encrypted-bale-token',
+            'is_active' => true,
+        ]);
+        $token = $owner->createToken('test')->plainTextToken;
+        $file = UploadedFile::fake()->createWithContent('bundle.zip', 'file contents');
+        $details = new \Aiobale\Types\FileDetails([
+            'file_id' => 123,
+            'access_hash' => 42,
+            'size' => 13,
+            'name' => 'bundle.zip',
+            'mime_type' => 'text/plain',
+        ]);
+        $uploads = \Mockery::mock(BaleFileUploadService::class);
+        $uploads->shouldReceive('upload')
+            ->once()
+            ->withArgs(fn (BaleAccount $uploadedAccount, string $path, string $mimeType): bool =>
+                $uploadedAccount->is($account)
+                && file_get_contents($path) === 'file contents'
+                && $mimeType !== ''
+            )
+            ->andReturn($details);
+        $this->app->instance(BaleFileUploadService::class, $uploads);
+
+        $this->withToken($token)
+            ->post('/api/v1/bale/accounts/' . $account->id . '/files', ['file' => $file])
+            ->assertCreated()
+            ->assertJsonPath('data.file_id', 123)
+            ->assertJsonPath('data.access_hash', 42)
+            ->assertJsonPath('data.name', 'bundle.zip')
+            ->assertJsonPath('data.mime_type', 'text/plain');
+
+        $this->assertDatabaseCount('media_assets', 0);
     }
 
     public function test_webhook_index_returns_data_and_pagination_metadata(): void

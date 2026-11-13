@@ -204,7 +204,21 @@ curl -X POST http://127.0.0.1:8000/api/v1/media \
 - `GET /api/v1/media/{media_id}/download` — دانلود فایل متعلق به کاربر جاری
 - `DELETE /api/v1/media/{media_id}` — حذف فایل
 
-حد پیش‌فرض آپلود ۵۰ مگابایت است و با `BALE_MAX_UPLOAD_KB` تغییر می‌کند. پیش از استفاده از فایل در عملیات بله، آن را با endpoint آپلود کنید و شناسه یا اطلاعات برگشتی را مطابق schema همان عملیات بفرستید.
+حد پیش‌فرض آپلود محلی ۵۰ مگابایت است و با `BALE_MAX_UPLOAD_KB` تغییر می‌کند.
+
+برای آپلود مستقیم به فضای Bale، حساب بله را در مسیر انتخاب و فایل را multipart بفرستید:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/bale/accounts/1/files \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Accept: application/json' \
+  -F 'file=@./document.pdf'
+```
+
+`POST /api/v1/bale/accounts/{account}/files` فقط فایل را در Bale ذخیره می‌کند و آن را
+به چت نمی‌فرستد یا در دیسک API نگه نمی‌دارد. پاسخ شامل `file_id`, `access_hash`,
+`size`, `name` و `mime_type` است؛ این مقادیر را می‌توان در payload هر عملیات Bale
+مطابق schema همان عملیات استفاده کرد. این مسیر هم از حد `BALE_MAX_UPLOAD_KB` استفاده می‌کند.
 
 ## Webhookها
 

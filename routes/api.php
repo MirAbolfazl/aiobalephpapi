@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BaleAccountController;
 use App\Http\Controllers\Api\V1\BaleAuthController;
+use App\Http\Controllers\Api\V1\BaleFileController;
 use App\Http\Controllers\Api\V1\BaleOperationController;
 use App\Http\Controllers\Api\V1\MediaAssetController;
 use App\Http\Controllers\Api\V1\WebhookEndpointController;
@@ -28,6 +29,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::patch('/bale/accounts/{account}', [BaleAccountController::class, 'update']);
         Route::delete('/bale/accounts/{account}', [BaleAccountController::class, 'destroy']);
         Route::post('/bale/accounts/{account}/sign-out', [BaleAccountController::class, 'signOut']);
+        Route::post('/bale/accounts/{account}/files', [BaleFileController::class, 'store']);
         Route::post('/bale/accounts/{account}/methods/{method}', [BaleOperationController::class, 'invoke'])
             ->where('method', '[A-Za-z][A-Za-z0-9_]*');
 
