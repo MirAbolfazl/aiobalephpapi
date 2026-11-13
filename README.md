@@ -212,6 +212,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/media \
 curl -X POST http://127.0.0.1:8000/api/v1/bale/accounts/1/files \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Accept: application/json' \
+  -F 'peer_id=123456' \
+  -F 'peer_type=2' \
   -F 'file=@./document.pdf'
 ```
 
@@ -219,6 +221,8 @@ curl -X POST http://127.0.0.1:8000/api/v1/bale/accounts/1/files \
 به چت نمی‌فرستد یا در دیسک API نگه نمی‌دارد. پاسخ شامل `file_id`, `access_hash`,
 `size`, `name` و `mime_type` است؛ این مقادیر را می‌توان در payload هر عملیات Bale
 مطابق schema همان عملیات استفاده کرد. این مسیر هم از حد `BALE_MAX_UPLOAD_KB` استفاده می‌کند.
+برای اتصال آپلود به مقصدی که بعداً فایل را در آن می‌فرستید، `peer_id` و `peer_type`
+را هم بفرستید (`1` برای کاربر خصوصی و `2` برای گروه).
 
 ## Webhookها
 

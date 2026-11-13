@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use Aiobale\Enums\PeerType;
 use Aiobale\Methods\MethodRegistry;
 use Aiobale\Methods\Messaging\SendMessage;
+use Aiobale\Types\Peer;
 use App\Jobs\DeliverWebhook;
 use App\Models\BaleAccount;
 use App\Models\MediaAsset;
@@ -151,16 +153,23 @@ class HttpApiTest extends TestCase
         $uploads = \Mockery::mock(BaleFileUploadService::class);
         $uploads->shouldReceive('upload')
             ->once()
-            ->withArgs(fn (BaleAccount $uploadedAccount, string $path, string $mimeType): bool =>
+            ->withArgs(fn (BaleAccount $uploadedAccount, string $path, string $mimeType, ?Peer $peer): bool =>
                 $uploadedAccount->is($account)
                 && file_get_contents($path) === 'file contents'
                 && $mimeType !== ''
+                && $peer?->type === PeerType::GROUP
+                && $peer?->id === 42
+                && $peer?->access_hash === 1
             )
             ->andReturn($details);
         $this->app->instance(BaleFileUploadService::class, $uploads);
 
         $this->withToken($token)
-            ->post('/api/v1/bale/accounts/' . $account->id . '/files', ['file' => $file])
+            ->post('/api/v1/bale/accounts/' . $account->id . '/files', [
+                'file' => $file,
+                'peer_id' => 42,
+                'peer_type' => PeerType::GROUP->value,
+            ])
             ->assertCreated()
             ->assertJsonPath('data.file_id', 123)
             ->assertJsonPath('data.access_hash', 42)

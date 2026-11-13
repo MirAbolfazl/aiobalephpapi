@@ -4,15 +4,15 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9ecf261a4c39415da29c2f00b9590cae",
+    "content-hash": "6698388c71216f9df49327a53c5c0cce",
     "packages": [
         {
             "name": "aiobale/aiobale-php",
-            "version": "dev-main",
+            "version": "dev-development",
             "dist": {
                 "type": "path",
                 "url": "../aiobalephp",
-                "reference": "4cb0095508f32bdd19dc78d91b6b648f34ced2f2"
+                "reference": "dae2d311e598b90a33ebe3da8c92685ad868de01"
             },
             "require": {
                 "amphp/amp": "^3.0",
